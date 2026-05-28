@@ -150,3 +150,12 @@ Recommended automated checks:
 - 이미지 업로드 전 클라이언트 리사이징을 초기 버전에 포함할지 결정해야 한다.
 - 포스트잇 위치를 DB에 저장할지, 클라이언트에서 id 기반 deterministic layout으로 계산할지 결정해야 한다.
 - 관리자 기능은 초기 버전에서는 제외하되, 데이터 모델과 컴포넌트 구조는 추후 삭제 기능을 추가하기 쉽게 유지한다.
+
+## Progress Update (2026-05-28)
+
+- Phase 1 일부 완료: Next.js + TypeScript + Tailwind 구성 파일 추가.
+- Phase 3 UI 선구현: EntryForm, 사진 첨부, DrawingCanvas, 기본 검증, 저장 상태 UI 구현.
+- Phase 4/5 UI 프로토타입: `/board` 포스트잇 카드, 상세 모달, 댓글 입력 UI 구현.
+- 현재 데이터 영속 및 실시간은 임시 `localStorage` 기반이며, Supabase 연동은 후속 작업으로 남아 있다.
+- Phase 3 진행 업데이트: 사진/그림 업로드 경로를 Supabase Storage 기반으로 교체했다.
+- `.env.local`의 `NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET`를 사용하며 현재 기본 버킷명은 `guestbook`이다.

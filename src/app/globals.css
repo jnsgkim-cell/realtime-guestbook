@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-amber-50 text-zinc-900;
+}
+
+button {
+  @apply cursor-pointer;
+}

@@ -47,3 +47,8 @@
 - 행사별 방명록 공간 분리
 - 이미지 최적화 고도화
 - 신고, 숨김, moderation workflow
+
+## Update Log
+
+- 2026-05-28: Next.js/Tailwind 기반 초기 UI 구조와 `/`, `/board` 페이지를 구현했고, 현재는 Supabase 연동 전 단계로 localStorage 기반 데모 상태다.
+- 2026-05-28: 방명록 미디어 저장 방식을 localStorage data URL에서 Supabase Storage 업로드(public URL 저장)로 전환했다.
