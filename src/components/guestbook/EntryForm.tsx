@@ -4,6 +4,8 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DrawingCanvas } from './DrawingCanvas';
 import { validateMessageLength, validateRequired } from '@/lib/validation';
+import { createGuestbookEntry } from '@/lib/supabase/entries';
+import { dataUrlToPngFile, uploadMediaToStorage } from '@/lib/supabase/storage';
 import type { MediaType } from '@/types/guestbook';
 
 export function EntryForm() {
@@ -11,49 +13,96 @@ export function EntryForm() {
   const [author, setAuthor] = useState('');
   const [message, setMessage] = useState('');
   const [mode, setMode] = useState<MediaType>('drawing');
-  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [drawingDataUrl, setDrawingDataUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const media = mode === 'photo' ? photoDataUrl : drawingDataUrl;
+  const hasMedia = mode === 'photo' ? Boolean(photoFile) : Boolean(drawingDataUrl);
 
   const valid = useMemo(
-    () => validateRequired(author) && validateMessageLength(message) && Boolean(media),
-    [author, message, media],
+    () => validateRequired(author) && validateMessageLength(message) && hasMedia,
+    [author, message, hasMedia],
   );
 
   const onPhoto = (file: File | null) => {
-    if (!file) return setPhotoDataUrl(null);
-    if (!file.type.startsWith('image/')) return setError('이미지 파일만 업로드할 수 있어요.');
-    if (file.size > 5 * 1024 * 1024) return setError('이미지는 5MB 이하만 가능합니다.');
+    if (!file) {
+      setPhotoFile(null);
+      setPhotoPreviewUrl(null);
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setError('이미지 파일만 업로드할 수 있어요.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError('이미지는 5MB 이하만 가능합니다.');
+      return;
+    }
+
     setError('');
-    const reader = new FileReader();
-    reader.onload = () => setPhotoDataUrl(String(reader.result));
-    reader.readAsDataURL(file);
+    setPhotoFile(file);
+    setPhotoPreviewUrl(URL.createObjectURL(file));
   };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
     if (!valid) {
       setError('이름, 메시지, 사진/그림을 모두 입력해 주세요.');
       return;
     }
+
     setSaving(true);
-    const payload = {
-      id: crypto.randomUUID(),
-      author_name: author.trim(),
-      message: message.trim(),
-      media_url: media,
-      media_type: mode,
-      created_at: new Date().toISOString(),
-    };
-    const prev = localStorage.getItem('entries');
-    const entries = prev ? JSON.parse(prev) : [];
-    localStorage.setItem('entries', JSON.stringify([payload, ...entries]));
-    setSaving(false);
-    router.push('/board');
+
+    try {
+      const entryId = crypto.randomUUID();
+      const uploadFile =
+        mode === 'photo'
+          ? photoFile
+          : drawingDataUrl
+            ? await dataUrlToPngFile(drawingDataUrl, `${entryId}.png`)
+            : null;
+
+      if (!uploadFile) {
+        setError('업로드할 이미지가 없습니다.');
+        return;
+      }
+
+      const uploadResult = await uploadMediaToStorage({
+        file: uploadFile,
+        mediaType: mode,
+        entryId,
+      });
+
+      if ('error' in uploadResult) {
+        setError(uploadResult.error);
+        return;
+      }
+
+      const saveResult = await createGuestbookEntry({
+        id: entryId,
+        author_name: author.trim(),
+        message: message.trim(),
+        media_url: uploadResult.publicUrl,
+        media_type: mode,
+      });
+
+      if ('error' in saveResult) {
+        setError(saveResult.error);
+        return;
+      }
+
+      router.push('/board');
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : '업로드 중 알 수 없는 오류가 발생했습니다.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -70,11 +119,11 @@ export function EntryForm() {
       ) : (
         <div className="space-y-2 rounded-2xl border-2 border-zinc-400 bg-white p-4">
           <input type="file" accept="image/*" onChange={(e) => onPhoto(e.target.files?.[0] ?? null)} />
-          {photoDataUrl ? <img src={photoDataUrl} alt="preview" className="max-h-64 w-full rounded-xl object-contain" /> : <p className="text-sm text-zinc-500">사진을 첨부해 주세요.</p>}
+          {photoPreviewUrl ? <img src={photoPreviewUrl} alt="preview" className="max-h-64 w-full rounded-xl object-contain" /> : <p className="text-sm text-zinc-500">사진을 첨부해 주세요.</p>}
         </div>
       )}
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
-      <button disabled={!valid || saving} className="w-full rounded-xl border-2 border-zinc-800 bg-white px-3 py-3 font-semibold disabled:opacity-50">{saving ? '저장 중...' : '등록하고 보드로 이동'}</button>
+      <button disabled={!valid || saving} className="w-full rounded-xl border-2 border-zinc-800 bg-white px-3 py-3 font-semibold disabled:opacity-50">{saving ? '업로드/저장 중...' : '등록하고 보드로 이동'}</button>
     </form>
   );
 }
