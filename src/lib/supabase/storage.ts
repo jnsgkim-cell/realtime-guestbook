@@ -14,10 +14,7 @@ export async function uploadMediaToStorage(params: {
     return { error: 'Supabase 환경변수가 설정되지 않았습니다. .env.local 값을 확인해 주세요.' };
   }
 
-  const bucket = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET;
-  if (!bucket) {
-    return { error: 'NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET 값이 없습니다. .env.local을 확인해 주세요.' };
-  }
+  const bucket = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || 'guestbook';
 
   const now = Date.now();
   const safeFileName = sanitizeFileName(params.file.name || `${now}.png`);
