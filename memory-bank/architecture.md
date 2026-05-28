@@ -164,3 +164,11 @@ src/
 - 신고 기능
 - 운영자용 moderation queue
 - QR 코드 진입 페이지
+
+## Implementation Update (2026-05-28)
+
+- 초기 UI 골격은 Next.js App Router + Tailwind CSS로 구현했다.
+- 현재 데모 단계에서는 Supabase 연동 전이라 `localStorage`를 임시 데이터 소스로 사용한다.
+- `/` 경로에서 이름/메시지/미디어 검증, 사진 업로드 미리보기, 캔버스 드로잉 UI를 제공한다.
+- `/board` 경로에서 포스트잇 그리드와 상세 모달, 댓글 입력 UI를 제공한다.
+- 다음 단계에서 `localStorage`를 `lib/supabase/*` 데이터 접근 계층으로 교체할 계획이다.
