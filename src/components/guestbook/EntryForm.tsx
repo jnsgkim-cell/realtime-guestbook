@@ -106,7 +106,7 @@ export function EntryForm() {
   };
 
   return (
-    <form onSubmit={onSubmit} className="mx-auto w-full max-w-xl space-y-4 rounded-3xl border-2 border-zinc-800 bg-amber-100 p-5 shadow-lg">
+    <form onSubmit={onSubmit} className="w-full space-y-4 rounded-3xl border-2 border-zinc-800 bg-amber-100 p-5 shadow-lg">
       <h1 className="text-center text-3xl font-bold">전자 방명록</h1>
       <input className="w-full rounded-xl border bg-white px-4 py-2" placeholder="이름 또는 닉네임" value={author} onChange={(e) => setAuthor(e.target.value)} />
       <textarea className="w-full rounded-xl border bg-white px-4 py-2" placeholder="짧은 메시지" rows={3} maxLength={200} value={message} onChange={(e) => setMessage(e.target.value)} />

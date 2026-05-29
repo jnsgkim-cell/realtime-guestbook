@@ -81,6 +81,7 @@ function RealtimeComments({ entryId }: { entryId: string }) {
         },
         (payload) => {
           const comment = payload.new as Comment;
+          if (comment.status && comment.status !== 'visible') return;
           setComments((current) => (
             current.some((item) => item.id === comment.id) ? current : [...current, comment]
           ));

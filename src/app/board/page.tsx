@@ -42,6 +42,7 @@ export default function BoardPage() {
         { event: 'INSERT', schema: 'public', table: 'guestbook_entries' },
         (payload) => {
           const entry = payload.new as GuestbookEntry;
+          if (entry.status && entry.status !== 'visible') return;
           setEntries((current) => (
             current.some((item) => item.id === entry.id) ? current : [entry, ...current]
           ));

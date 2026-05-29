@@ -1,53 +1,67 @@
 # AGENTS.md
 
-이 프로젝트에서 작업하는 모든 에이전트는 작업을 시작하기 전에 이 문서를 조회하고, 프로젝트 구조나 개발 규칙, 구현 계획, 주요 의사결정이 바뀌면 이 문서를 항상 수정해야 한다.
-
 ## Project
 
-실시간 전자 방명록 웹앱.
+Realtime electronic guestbook web app.
 
-전시회, 행사, 팝업스토어, 졸업식, 결혼식 등에서 방문자가 사진을 첨부하거나 직접 그림을 그려 방명록을 남기고, 다른 사람들이 남긴 방명록을 포스트잇 형태로 실시간 확인할 수 있는 웹앱이다.
+Visitors at events, exhibitions, pop-ups, graduations, weddings, and similar venues can upload a photo or draw on a canvas to leave a guestbook entry. Entries appear on a realtime post-it style board, and each post-it can show realtime comments.
 
 ## Required Memory Bank
 
-작업 중에는 `memory-bank` 폴더의 문서를 항상 함께 조회하고 최신 상태로 유지한다.
+Before starting work, read the relevant files in `memory-bank` and keep them updated when decisions or implementation details change.
 
-- `memory-bank/architecture.md`: 시스템 구조, 데이터 모델, 주요 기술 선택, 컴포넌트 경계
-- `memory-bank/implementation-plan.md`: 구현 순서, 작업 단계, 검증 항목, 향후 확장 계획
+- `memory-bank/architecture.md`: System structure, data model, stack choices, component boundaries.
+- `memory-bank/implementation-plan.md`: Implementation order, task phases, verification checklist, future extension plan.
+- `memory-bank/auth-plan.md`: Authentication, authorization, admin moderation, RLS policy, and migration plan.
 
 ## Development Rules
 
-- 프론트엔드는 React 또는 Next.js 기반으로 구현한다.
-- 스타일링은 Tailwind CSS를 사용한다.
-- 실시간 데이터와 파일 저장은 Supabase 또는 Firebase 중 하나를 선택해 일관되게 사용한다.
-- 그림 그리기는 HTML Canvas를 사용한다.
-- `/`는 방명록 작성 페이지, `/board`는 실시간 포스트잇 보드 페이지로 구성한다.
-- 포스트잇 상세 보기는 `/board` 내부 모달 또는 상세 패널로 처리한다.
-- 코드 구조는 컴포넌트 단위로 나누고, 실시간 구독 로직과 데이터 접근 로직은 UI 컴포넌트에 과도하게 섞지 않는다.
-- 사용자가 빈 이름, 빈 메시지, 첨부 없는 방명록을 제출하지 못하도록 검증한다.
-- 업로드 중, 저장 중, 오류 상태를 UI에 명확히 표시한다.
-- 모바일 행사장 사용 경험을 우선 고려한다.
+- Use Next.js, React, and TypeScript.
+- Use Tailwind CSS for styling.
+- Use Supabase for database, Storage, and Realtime behavior.
+- Use HTML Canvas for drawing.
+- `/` is the entry creation page.
+- `/board` is the realtime post-it board.
+- Post-it details should be handled inside `/board` through a modal or detail panel.
+- Keep data access and realtime subscription logic separate from presentational UI where practical.
+- Validate required name, message, and media inputs before submission.
+- Show clear loading, saving, uploading, and error states.
+- Prioritize mobile event-use ergonomics.
 
 ## Current Product Scope
 
-### Core Features
+Core features:
 
-- 이름 또는 닉네임 입력
-- 짧은 메시지 입력
-- 사진 업로드 또는 캔버스 그림 그리기 선택
-- 펜 색상 선택, 펜 두께 조절, 지우개, 전체 지우기
-- 작성 완료 후 저장 및 `/board` 이동
-- 포스트잇 형태의 실시간 방명록 보드
-- 포스트잇 클릭 시 상세 모달
-- 상세 모달에서 댓글 작성 및 실시간 댓글 반영
+- Name or nickname input.
+- Short message input.
+- Photo upload or canvas drawing mode.
+- Drawing tools such as color, line width, eraser/clear.
+- Supabase Storage upload for media.
+- Supabase `guestbook_entries` persistence.
+- Supabase `comments` persistence.
+- Realtime board updates.
+- Realtime comment updates inside the selected post-it modal.
 
-### Deferred Features
+Deferred features:
 
-- 부적절한 댓글 삭제를 위한 관리자 기능
-- 행사별 방명록 공간 분리
-- 이미지 최적화 고도화
-- 신고, 숨김, moderation workflow
+- Admin moderation UI.
+- Authenticated admin role management.
+- Event-specific boards.
+- Image optimization pipeline.
+- Abuse reporting and moderation workflow.
+
+## Authentication And Authorization Direction
+
+- Keep the public guestbook flow low-friction: visitors may create entries and comments without signing in.
+- Require Supabase Auth for administrative features such as hiding entries, hiding comments, deleting media, or viewing moderation queues.
+- Treat Row Level Security policies as the real authorization boundary, not only UI-level checks.
+- Store admin authorization in a database role/profile table rather than hardcoding emails in client code.
+- Prefer soft moderation (`status = hidden`) before hard delete, so accidental moderation actions can be reversed.
+- Before implementing auth changes, read `memory-bank/auth-plan.md` and update it when decisions or schema details change.
 
 ## Update Log
 
-- 2026-05-28: Next.js/Tailwind 기반 초기 UI 구조와 `/`, `/board` 페이지를 구현했고, 현재는 Supabase 연동 전 단계로 localStorage 기반 데모 상태다.
+- 2026-05-28: Initial Next.js/Tailwind UI implemented for `/` and `/board`.
+- 2026-05-28: Supabase Storage upload helpers added.
+- 2026-05-29: Guestbook entries and comments moved from localStorage to Supabase DB with Realtime subscriptions.
+- 2026-05-29: Authentication and authorization planning added.
